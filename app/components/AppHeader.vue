@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { debounce } from 'perfect-debounce'
-
 withDefaults(
   defineProps<{
     showLogo?: boolean
@@ -15,50 +13,9 @@ withDefaults(
 const { isConnected, npmUser } = useConnector()
 
 const router = useRouter()
-const route = useRoute()
 
-const isSearchFocused = ref(false)
+const showFullSearch = ref(false)
 
-const showSearchBar = computed(() => {
-  return route.name !== 'index'
-})
-
-// Local input value (updates immediately as user types)
-const searchQuery = ref((route.query.q as string) ?? '')
-
-// Debounced URL update for search query
-const updateUrlQuery = debounce((value: string) => {
-  if (route.name === 'search') {
-    router.replace({ query: { q: value || undefined } })
-    return
-  }
-  if (!value) {
-    return
-  }
-
-  router.push({
-    name: 'search',
-    query: {
-      q: value,
-    },
-  })
-}, 250)
-
-// Watch input and debounce URL updates
-watch(searchQuery, value => {
-  updateUrlQuery(value)
-})
-
-// Sync input with URL when navigating (e.g., back button)
-watch(
-  () => route.query.q,
-  urlQuery => {
-    const value = (urlQuery as string) ?? ''
-    if (searchQuery.value !== value) {
-      searchQuery.value = value
-    }
-  },
-)
 onKeyStroke(',', e => {
   // Don't trigger if user is typing in an input
   const target = e.target as HTMLElement
@@ -78,7 +35,7 @@ onKeyStroke(',', e => {
       class="container h-14 flex items-center justify-start"
     >
       <!-- Start: Logo -->
-      <div class="flex-shrink-0">
+      <div :class="{ 'hidden sm:block': showFullSearch }" class="flex-shrink-0">
         <NuxtLink
           v-if="showLogo"
           to="/"
@@ -92,41 +49,17 @@ onKeyStroke(',', e => {
       </div>
 
       <!-- Center: Search bar + nav items -->
-      <div class="flex-1 flex items-center justify-center gap-4 sm:gap-6">
-        <!-- Search bar (shown on all pages except home and search) -->
-        <search v-if="showSearchBar" class="hidden sm:block flex-1 max-w-md">
-          <form method="GET" action="/search" class="relative">
-            <label for="header-search" class="sr-only">
-              {{ $t('search.label') }}
-            </label>
-
-            <div class="relative group" :class="{ 'is-focused': isSearchFocused }">
-              <div class="search-box relative flex items-center">
-                <span
-                  class="absolute inset-is-3 text-fg-subtle font-mono text-sm pointer-events-none transition-colors duration-200 motion-reduce:transition-none group-focus-within:text-accent z-1"
-                >
-                  /
-                </span>
-
-                <input
-                  id="header-search"
-                  autofocus
-                  v-model="searchQuery"
-                  type="search"
-                  name="q"
-                  :placeholder="$t('search.placeholder')"
-                  v-bind="noCorrect"
-                  class="w-full bg-bg-subtle border border-border rounded-md ps-7 pe-3 py-1.5 font-mono text-sm text-fg placeholder:text-fg-subtle transition-border-color duration-300 motion-reduce:transition-none focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                  @focus="isSearchFocused = true"
-                  @blur="isSearchFocused = false"
-                />
-                <button type="submit" class="sr-only">{{ $t('search.button') }}</button>
-              </div>
-            </div>
-          </form>
-        </search>
-
-        <ul class="flex items-center gap-4 sm:gap-6 list-none m-0 p-0">
+      <div class="flex-1 flex items-center justify-center md:gap-6 mx-2">
+        <!-- Search bar (shown on all pages except home) -->
+        <SearchBox
+          :inputClass="showFullSearch ? '' : 'max-w[6rem]'"
+          @focus="showFullSearch = true"
+          @blur="showFullSearch = false"
+        />
+        <ul
+          :class="{ 'hidden sm:flex': showFullSearch }"
+          class="flex items-center gap-4 sm:gap-6 list-none m-0 p-0"
+        >
           <!-- Packages dropdown (when connected) -->
           <li v-if="isConnected && npmUser" class="flex items-center">
             <HeaderPackagesDropdown :username="npmUser" />
@@ -140,7 +73,10 @@ onKeyStroke(',', e => {
       </div>
 
       <!-- End: User status + GitHub -->
-      <div class="flex-shrink-0 flex items-center gap-4 sm:gap-6 ms-auto sm:ms-0">
+      <div
+        :class="{ 'hidden sm:flex': showFullSearch }"
+        class="flex-shrink-0 flex items-center gap-4 sm:gap-6 ms-auto sm:ms-0"
+      >
         <NuxtLink
           to="/about"
           class="sm:hidden link-subtle font-mono text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded"
