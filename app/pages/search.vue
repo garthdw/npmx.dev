@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatNumber } from '#imports'
 import type { FilterChip, SortOption } from '#shared/types/preferences'
+import { onKeyDown } from '@vueuse/core'
 import { debounce } from 'perfect-debounce'
 import { isValidNewPackageName, checkPackageExists } from '~/utils/package-name'
 import { isPlatformSpecificPackage } from '~/utils/platform-packages'
@@ -638,38 +639,14 @@ function scrollToSelectedItem() {
   }
 }
 
-function focusSelectedItem() {
-  const suggIdx = toSuggestionIndex(unifiedSelectedIndex.value)
-  const pkgIdx = toPackageIndex(unifiedSelectedIndex.value)
-
-  nextTick(() => {
-    if (suggIdx !== null) {
-      const el = document.querySelector<HTMLElement>(`[data-suggestion-index="${suggIdx}"]`)
-      el?.focus()
-    } else if (pkgIdx !== null) {
-      scrollToSelectedItem()
-      nextTick(() => {
-        const el = document.querySelector<HTMLElement>(`[data-result-index="${pkgIdx}"]`)
-        el?.focus()
-      })
-    }
-  })
-}
-
 function handleResultsKeydown(e: KeyboardEvent) {
   if (totalSelectableCount.value <= 0) return
-
-  const isFromInput = (e.target as HTMLElement).tagName === 'INPUT'
 
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     userHasNavigated.value = true
     unifiedSelectedIndex.value = clampUnifiedIndex(unifiedSelectedIndex.value + 1)
-    if (isFromInput) {
-      scrollToSelectedItem()
-    } else {
-      focusSelectedItem()
-    }
+    scrollToSelectedItem()
     return
   }
 
@@ -677,11 +654,7 @@ function handleResultsKeydown(e: KeyboardEvent) {
     e.preventDefault()
     userHasNavigated.value = true
     unifiedSelectedIndex.value = clampUnifiedIndex(unifiedSelectedIndex.value - 1)
-    if (isFromInput) {
-      scrollToSelectedItem()
-    } else {
-      focusSelectedItem()
-    }
+    scrollToSelectedItem()
     return
   }
 
@@ -707,6 +680,8 @@ function handleResultsKeydown(e: KeyboardEvent) {
   }
 }
 
+onKeyDown(['ArrowDown', 'ArrowUp', 'Enter'], handleResultsKeydown)
+
 function handleSuggestionSelect(index: number) {
   // Convert suggestion index to unified index
   unifiedSelectedIndex.value = -(suggestionCount.value - index)
@@ -731,7 +706,7 @@ defineOgImageComponent('Default', {
   <main class="overflow-x-hidden">
     <!-- Results area with container padding -->
     <div class="container-sm py-6">
-      <section v-if="query" :aria-label="$t('search.results')" @keydown="handleResultsKeydown">
+      <section v-if="query" :aria-label="$t('search.results')">
         <!-- Initial loading (only after user interaction, not during view transition) -->
         <LoadingSpinner v-if="showSearching" :text="$t('search.searching')" />
 
