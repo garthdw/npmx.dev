@@ -17,27 +17,48 @@ const { isConnected, npmUser } = useConnector()
 const router = useRouter()
 const route = useRoute()
 
-const searchQuery = ref('')
 const isSearchFocused = ref(false)
 
 const showSearchBar = computed(() => {
-  return route.name !== 'search' && route.name !== 'index'
+  return route.name !== 'index'
 })
 
-const debouncedNavigate = debounce(async () => {
-  const query = searchQuery.value.trim()
-  await router.push({
+// Local input value (updates immediately as user types)
+const searchQuery = ref((route.query.q as string) ?? '')
+
+// Debounced URL update for search query
+const updateUrlQuery = debounce((value: string) => {
+  if (route.name === 'search') {
+    router.replace({ query: { q: value || undefined } })
+    return
+  }
+  if (!value) {
+    return
+  }
+
+  router.push({
     name: 'search',
-    query: query ? { q: query } : undefined,
+    query: {
+      q: value,
+    },
   })
-  // allow time for the navigation to occur before resetting searchQuery
-  setTimeout(() => (searchQuery.value = ''), 1000)
-}, 100)
+}, 250)
 
-async function handleSearchInput() {
-  debouncedNavigate()
-}
+// Watch input and debounce URL updates
+watch(searchQuery, value => {
+  updateUrlQuery(value)
+})
 
+// Sync input with URL when navigating (e.g., back button)
+watch(
+  () => route.query.q,
+  urlQuery => {
+    const value = (urlQuery as string) ?? ''
+    if (searchQuery.value !== value) {
+      searchQuery.value = value
+    }
+  },
+)
 onKeyStroke(',', e => {
   // Don't trigger if user is typing in an input
   const target = e.target as HTMLElement
@@ -95,7 +116,6 @@ onKeyStroke(',', e => {
                   :placeholder="$t('search.placeholder')"
                   v-bind="noCorrect"
                   class="w-full bg-bg-subtle border border-border rounded-md ps-7 pe-3 py-1.5 font-mono text-sm text-fg placeholder:text-fg-subtle transition-border-color duration-300 motion-reduce:transition-none focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                  @input="handleSearchInput"
                   @focus="isSearchFocused = true"
                   @blur="isSearchFocused = false"
                 />

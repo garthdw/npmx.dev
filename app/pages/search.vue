@@ -18,14 +18,6 @@ const {
   resetColumns,
 } = usePackageListPreferences()
 
-// Local input value (updates immediately as user types)
-const inputValue = ref((route.query.q as string) ?? '')
-
-// Debounced URL update for search query
-const updateUrlQuery = debounce((value: string) => {
-  router.replace({ query: { q: value || undefined } })
-}, 250)
-
 // Debounced URL update for page (less aggressive to avoid too many URL changes)
 const updateUrlPage = debounce((page: number) => {
   router.replace({
@@ -36,28 +28,8 @@ const updateUrlPage = debounce((page: number) => {
   })
 }, 500)
 
-// Watch input and debounce URL updates
-watch(inputValue, value => {
-  updateUrlQuery(value)
-})
-
 // The actual search query (from URL, used for API calls)
 const query = computed(() => (route.query.q as string) ?? '')
-
-// Sync input with URL when navigating (e.g., back button)
-watch(
-  () => route.query.q,
-  urlQuery => {
-    const value = (urlQuery as string) ?? ''
-    if (inputValue.value !== value) {
-      inputValue.value = value
-    }
-  },
-)
-
-// For glow effect
-const searchInputRef = useTemplateRef('searchInputRef')
-const { focused: isSearchFocused } = useFocus(searchInputRef)
 
 const selectedIndex = ref(0)
 const packageListRef = useTemplateRef('packageListRef')
@@ -65,8 +37,6 @@ const packageListRef = useTemplateRef('packageListRef')
 // Track if page just loaded (for hiding "Searching..." during view transition)
 const hasInteracted = ref(false)
 onMounted(() => {
-  // Focus search onMount
-  isSearchFocused.value = true
   // Small delay to let view transition complete
   setTimeout(() => {
     hasInteracted.value = true
@@ -759,60 +729,8 @@ defineOgImageComponent('Default', {
 
 <template>
   <main class="overflow-x-hidden">
-    <!-- Sticky search header - positioned below AppHeader (h-14 = 56px) -->
-    <header class="sticky top-14 z-40 bg-bg/95 backdrop-blur-sm border-b border-border">
-      <div class="container-sm py-4">
-        <h1 class="font-mono text-xl sm:text-2xl font-medium mb-4">{{ $t('nav.search') }}</h1>
-
-        <search>
-          <form method="GET" action="/search" class="relative" @submit.prevent>
-            <label for="search-input" class="sr-only">{{ $t('search.label') }}</label>
-
-            <div class="relative group" :class="{ 'is-focused': isSearchFocused }">
-              <!-- Subtle glow effect -->
-              <div
-                class="absolute -inset-px rounded-lg bg-gradient-to-r from-fg/0 via-fg/5 to-fg/0 opacity-0 transition-opacity duration-500 blur-sm group-[.is-focused]:opacity-100 motion-reduce:transition-none"
-              />
-
-              <div class="search-box relative flex items-center">
-                <span
-                  class="absolute left-4 text-fg-subtle font-mono text-base pointer-events-none transition-colors duration-200 group-focus-within:text-accent"
-                  aria-hidden="true"
-                >
-                  /
-                </span>
-                <input
-                  id="search-input"
-                  ref="searchInputRef"
-                  v-model="inputValue"
-                  type="search"
-                  name="q"
-                  :placeholder="$t('search.placeholder')"
-                  v-bind="noCorrect"
-                  autofocus
-                  class="w-full max-w-full bg-bg-subtle border border-border rounded-lg pl-8 pr-10 py-3 font-mono text-base text-fg placeholder:text-fg-subtle transition-colors duration-300 focus:border-accent focus-visible:outline-none appearance-none"
-                  @keydown="handleResultsKeydown"
-                />
-                <button
-                  v-show="inputValue"
-                  type="button"
-                  class="absolute right-3 p-2 text-fg-subtle hover:text-fg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg/50 rounded"
-                  :aria-label="$t('search.clear')"
-                  @click="inputValue = ''"
-                >
-                  <span class="i-carbon-close-large block w-3.5 h-3.5" aria-hidden="true" />
-                </button>
-                <!-- Hidden submit button for accessibility (form must have submit button per WCAG) -->
-                <button type="submit" class="sr-only">{{ $t('search.button') }}</button>
-              </div>
-            </div>
-          </form>
-        </search>
-      </div>
-    </header>
-
     <!-- Results area with container padding -->
-    <div class="container-sm pt-20 pb-6">
+    <div class="container-sm py-6">
       <section v-if="query" :aria-label="$t('search.results')" @keydown="handleResultsKeydown">
         <!-- Initial loading (only after user interaction, not during view transition) -->
         <LoadingSpinner v-if="showSearching" :text="$t('search.searching')" />
