@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, useId } from 'vue'
+import { ref, computed } from 'vue'
 
 interface Props {
   title: string
@@ -20,6 +20,20 @@ const contentId = `${props.id}-collapsible-content`
 const headingId = `${props.id}-heading`
 
 const isOpen = ref(true)
+
+onPrehydrate(() => {
+  const settings = JSON.parse(localStorage.getItem('npmx-settings') || '{}')
+  const collapsed: string[] = settings?.sidebar?.collapsed || []
+  for (const id of collapsed) {
+    if (!document.documentElement.dataset.collapsed?.includes(id)) {
+      document.documentElement.dataset.collapsed = (
+        document.documentElement.dataset.collapsed +
+        ' ' +
+        id
+      ).trim()
+    }
+  }
+})
 
 onMounted(() => {
   if (document?.documentElement) {
@@ -47,17 +61,19 @@ const ariaLabel = computed(() => {
   const action = isOpen.value ? 'Collapse' : 'Expand'
   return props.title ? `${action} ${props.title}` : action
 })
-const dynamicCSS = computed(() => {
-  return `:root[data-collapsed~='${props.id}'] section[data-anchor-id='${props.id}'] .collapsible-content {
+useHead({
+  style: [
+    {
+      innerHTML: `
+:root[data-collapsed~='${props.id}'] section[data-anchor-id='${props.id}'] .collapsible-content {
   grid-template-rows: 0fr;
-}`
+}`,
+    },
+  ],
 })
 </script>
 
 <template>
-  <component :is="'style'">
-    {{ dynamicCSS }}
-  </component>
   <section class="scroll-mt-20" :data-anchor-id="id">
     <div class="flex items-center justify-between mb-3">
       <component
