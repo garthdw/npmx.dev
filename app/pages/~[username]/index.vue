@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { formatNumber } from '#imports'
 import { debounce } from 'perfect-debounce'
 
 const route = useRoute('~username')
@@ -192,7 +191,7 @@ defineOgImageComponent('Default', {
         <div>
           <h1 class="font-mono text-2xl sm:text-3xl font-medium">~{{ username }}</h1>
           <p v-if="results?.total" class="text-fg-muted text-sm mt-1">
-            {{ $t('org.public_packages', { count: formatNumber(results.total) }, results.total) }}
+            {{ $t('org.public_packages', { count: $n(results.total) }, results.total) }}
           </p>
         </div>
 
@@ -216,7 +215,7 @@ defineOgImageComponent('Default', {
           >
             <span class="i-carbon:chart-line w-3.5 h-3.5" aria-hidden="true" />
             <span class="font-mono"
-              >{{ formatNumber(totalWeeklyDownloads) }} {{ $t('common.per_week') }}</span
+              >{{ $n(totalWeeklyDownloads) }} {{ $t('common.per_week') }}</span
             >
           </p>
         </div>

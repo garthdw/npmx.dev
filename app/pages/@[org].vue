@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { formatNumber } from '#imports'
 import type { FilterChip, SortOption } from '#shared/types/preferences'
 import { debounce } from 'perfect-debounce'
 
@@ -157,7 +156,7 @@ defineOgImageComponent('Default', {
         <div>
           <h1 class="font-mono text-2xl sm:text-3xl font-medium">@{{ orgName }}</h1>
           <p v-if="status === 'success'" class="text-fg-muted text-sm mt-1">
-            {{ $t('org.public_packages', { count: formatNumber(packageCount) }, packageCount) }}
+            {{ $t('org.public_packages', { count: $n(packageCount) }, packageCount) }}
           </p>
         </div>
 
@@ -181,7 +180,7 @@ defineOgImageComponent('Default', {
           >
             <span class="i-carbon:chart-line w-3.5 h-3.5" aria-hidden="true" />
             <span class="font-mono"
-              >{{ formatNumber(totalWeeklyDownloads) }} {{ $t('common.per_week') }}</span
+              >{{ $n(totalWeeklyDownloads) }} {{ $t('common.per_week') }}</span
             >
           </p>
         </div>

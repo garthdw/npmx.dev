@@ -258,10 +258,6 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function formatNumber(num: number): string {
-  return new Intl.NumberFormat('en-US').format(num)
-}
-
 function getDependencyCount(version: PackumentVersion | null): number {
   if (!version?.dependencies) return 0
   return Object.keys(version.dependencies).length
@@ -360,7 +356,7 @@ onKeyStroke(
 defineOgImageComponent('Package', {
   name: () => pkg.value?.name ?? 'Package',
   version: () => displayVersion.value?.version ?? '',
-  downloads: () => (downloads.value ? formatNumber(downloads.value.downloads) : ''),
+  downloads: () => (downloads.value ? $n(downloads.value.downloads) : ''),
   license: () => pkg.value?.license ?? '',
   primaryColor: '#60a5fa',
 })
