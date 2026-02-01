@@ -408,7 +408,7 @@ function handleClick(event: MouseEvent) {
                 class="text-fg-muted hover:text-fg transition-colors duration-200"
                 >@{{ orgName }}</NuxtLink
               ><span v-if="orgName">/</span>
-              <AnnounceTooltip :text="$t('common.copied')" :isVisible="copiedPkgName">
+              <TooltipAnnounce :text="$t('common.copied')" :isVisible="copiedPkgName">
                 <button
                   @click="copyPkgName()"
                   aria-describedby="copy-pkg-name"
@@ -416,7 +416,7 @@ function handleClick(event: MouseEvent) {
                 >
                   {{ orgName ? pkg.name.replace(`@${orgName}/`, '') : pkg.name }}
                 </button>
-              </AnnounceTooltip>
+              </TooltipAnnounce>
             </h1>
 
             <span id="copy-pkg-name" class="sr-only">{{ $t('package.copy_name') }}</span>
@@ -875,7 +875,7 @@ function handleClick(event: MouseEvent) {
           :id="`pm-panel-${activePmId}`"
           :aria-labelledby="`pm-tab-${activePmId}`"
         >
-          <ExecuteCommandTerminal
+          <TerminalExecute
             :package-name="pkg.name"
             :jsr-info="jsrInfo"
             :is-create-package="isCreatePkg"
@@ -909,7 +909,7 @@ function handleClick(event: MouseEvent) {
           :id="`pm-panel-${activePmId}`"
           :aria-labelledby="`pm-tab-${activePmId}`"
         >
-          <InstallCommandTerminal
+          <TerminalInstall
             :package-name="pkg.name"
             :requested-version="requestedVersion"
             :jsr-info="jsrInfo"
