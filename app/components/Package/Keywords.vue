@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   keywords?: string[]
 }>()
 </script>
@@ -7,9 +7,9 @@ const props = defineProps<{
   <CollapsibleSection v-if="keywords?.length" :title="$t('package.keywords_title')" id="keywords">
     <ul class="flex flex-wrap gap-1.5 list-none m-0 p-0">
       <li v-for="keyword in keywords.slice(0, 15)" :key="keyword">
-        <NuxtLink :to="{ name: 'search', query: { q: `keywords:${keyword}` } }" class="tag">
+        <TagClickable :as="NuxtLink" :to="{ name: 'search', query: { q: `keywords:${keyword}` } }">
           {{ keyword }}
-        </NuxtLink>
+        </TagClickable>
       </li>
     </ul>
   </CollapsibleSection>
